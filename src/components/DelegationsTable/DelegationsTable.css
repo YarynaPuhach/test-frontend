@@ -1,0 +1,18 @@
+.delegations-table {
+  padding: 20px;
+}
+
+.delegations-table-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.delegations-table-table th, .delegations-table-table td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.delegations-table-table th {
+  background-color: #f4f4f4;
+}

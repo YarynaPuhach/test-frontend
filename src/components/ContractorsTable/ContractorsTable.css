@@ -1,0 +1,66 @@
+.contractors-table {
+  padding: 20px;
+}
+
+.contractors-table-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.contractors-table-table th, .contractors-table-table td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.contractors-table-table th {
+  background-color: #f4f4f4;
+}
+
+.deleted {
+  background-color: #f8d7da;
+}
+
+.contractor-form {
+  margin-top: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.form-input, .form-checkbox {
+
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.form-input {
+  width: 100%;
+}
+
+.btn {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background-color: #0056b3;
+}
+.error-text {
+  color: red;
+  font-size: 0.875em;
+}
+
+.form-input::placeholder {
+  color: #aaa;
+}

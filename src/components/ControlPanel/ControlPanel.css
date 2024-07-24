@@ -1,0 +1,48 @@
+.control-panel {
+  max-width: 600px;
+  margin: auto;
+  padding: 20px;
+}
+
+.control-panel-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-input,
+.form-textarea,
+.form-select {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.form-textarea {
+  resize: vertical;
+  height: 100px;
+}
+
+.error-text {
+  color: red;
+  font-size: 0.875em;
+  margin-top: 5px;
+}
+
+.btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background-color: #0056b3;
+}
