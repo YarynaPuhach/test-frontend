@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import './InvoicesTable.css';
+import Loader from '../Loader/Loader';
 
 const InvoicesTable = () => {
   const [invoices, setInvoices] = useState([]);
   const [vatRate, setVatRate] = useState(23); // Default VAT rate
   const [highlightRows, setHighlightRows] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchInvoices = async () => {
@@ -17,6 +19,8 @@ const InvoicesTable = () => {
         setInvoices(data);
       } catch (error) {
         console.error('Error fetching invoices:', error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchInvoices();
@@ -38,6 +42,9 @@ const InvoicesTable = () => {
       grossAmount: grossAmount * quantity
     };
   };
+  if (loading) {
+    return <Loader />;
+  }
 
   return (
     <div className="invoices-table">

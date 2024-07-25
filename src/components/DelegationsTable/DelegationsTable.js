@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import './DelegationsTable.css';
+import Loader from '../Loader/Loader';
 
 const DelegationsTable = () => {
   const [delegations, setDelegations] = useState([]);
-
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     const fetchDelegations = async () => {
       try {
@@ -15,10 +16,16 @@ const DelegationsTable = () => {
         setDelegations(data);
       } catch (error) {
         console.error('Error fetching delegations:', error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchDelegations();
   }, []);
+
+  if (loading) {
+    return <Loader />;
+  }
 
   return (
     <div className="delegations-table">

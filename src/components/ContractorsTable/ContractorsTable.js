@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './ContractorsTable.css';
+import Loader from '../Loader/Loader';
 
 const ContractorsTable = () => {
   const [contractors, setContractors] = useState([]);
@@ -14,6 +15,7 @@ const ContractorsTable = () => {
   });
   const [editContractor, setEditContractor] = useState(null);
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchContractors = async () => {
@@ -26,6 +28,8 @@ const ContractorsTable = () => {
         setContractors(data);
       } catch (error) {
         console.error('Error fetching contractors:', error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchContractors();
@@ -117,6 +121,10 @@ const ContractorsTable = () => {
     }
   };
 
+  if (loading) {
+    return <Loader />;
+  }
+  
   return (
     <div className="contractors-table">
       <h2>Dane Kontrahentów</h2>

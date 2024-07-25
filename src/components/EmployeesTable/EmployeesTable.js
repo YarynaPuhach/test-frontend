@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import './EmployeesTable.css'
+import Loader from '../Loader/Loader';
 
 const EmployeesTable = () => {
   const [employees, setEmployees] = useState([]);
   const [rowColor1, setRowColor1] = useState('#f8f9fa');
   const [rowColor2, setRowColor2] = useState('#e9ecef');
-
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
@@ -17,6 +18,8 @@ const EmployeesTable = () => {
         setEmployees(data);
       } catch (error) {
         console.error('Error fetching employees:', error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchEmployees();
@@ -30,6 +33,9 @@ const EmployeesTable = () => {
       setRowColor2(value);
     }
   };
+  if (loading) {
+    return <Loader />;
+  }
 
   return (
     <div className="employees-table">

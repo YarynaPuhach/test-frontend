@@ -12,10 +12,10 @@ function App() {
   return (
     <Router>
       <div className="app-container">
-        <div className="sidebar-container">
+        <div id='Lewy'className="sidebar-container">
           <Sidebar />
         </div>
-        <div className="content-container">
+        <div id='Prawy' className="content-container">
           <Routes>
             <Route path="/control-panel" element={<ControlPanel />} />
             <Route path="/employees-table" element={<EmployeesTable />} />
