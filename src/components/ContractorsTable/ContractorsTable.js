@@ -37,10 +37,17 @@ const ContractorsTable = () => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setNewContractor((prevContractor) => ({
-      ...prevContractor,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+    if (editContractor) {
+      setEditContractor((prevContractor) => ({
+        ...prevContractor,
+        [name]: type === 'checkbox' ? checked : value
+      }));
+    } else {
+      setNewContractor((prevContractor) => ({
+        ...prevContractor,
+        [name]: type === 'checkbox' ? checked : value
+      }));
+    }
   };
 
   const validateForm = () => {
@@ -84,13 +91,21 @@ const ContractorsTable = () => {
   };
 
   const handleEditContractor = async () => {
-    if (!editContractor || !validateForm()) return;
+    if (!editContractor) return;
+
+    // Create an object with only the fields that have been changed
+    const updatedFields = {};
+    Object.keys(editContractor).forEach((key) => {
+      if (editContractor[key] !== (contractors.find(c => c.id === editContractor.id) || {})[key]) {
+        updatedFields[key] = editContractor[key];
+      }
+    });
 
     try {
       const response = await fetch(`https://test-backend-g0f7.onrender.com/api/contractors/${editContractor.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editContractor)
+        body: JSON.stringify(updatedFields)
       });
       if (!response.ok) {
         throw new Error('Network response was not ok');
@@ -124,7 +139,7 @@ const ContractorsTable = () => {
   if (loading) {
     return <Loader />;
   }
-  
+
   return (
     <div className="contractors-table">
       <h2>Dane Kontrahentów</h2>
@@ -245,7 +260,7 @@ const ContractorsTable = () => {
             id="apartmentNumber"
             name="apartmentNumber"
             className="form-input"
-            placeholder="Podaj numer mieszkania (opcjonalnie)"
+            placeholder="Podaj numer mieszkania"
             value={editContractor ? editContractor.apartmentNumber : newContractor.apartmentNumber}
             onChange={(e) => handleInputChange(e)}
           />
