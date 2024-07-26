@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import './DelegationsTable.css';
 import Loader from '../Loader/Loader';
+import { fetchDelegations } from './../../api';
 
 const DelegationsTable = () => {
   const [delegations, setDelegations] = useState([]);
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    const fetchDelegations = async () => {
+    const loadDelegations = async () => {
       try {
-        const response = await fetch('https://test-backend-g0f7.onrender.com/api/delegations');
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
+        const data = await fetchDelegations();
         setDelegations(data);
       } catch (error) {
         console.error('Error fetching delegations:', error);
@@ -20,16 +18,13 @@ const DelegationsTable = () => {
         setLoading(false);
       }
     };
-    fetchDelegations();
+    loadDelegations();
   }, []);
-
-  if (loading) {
-    return <Loader />;
-  }
 
   return (
     <div className="delegations-table">
       <h2>Tabela Delegacji BD</h2>
+      {loading && <Loader />}
       <table className="delegations-table-table">
         <thead>
           <tr>

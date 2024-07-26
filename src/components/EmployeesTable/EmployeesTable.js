@@ -1,20 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import './EmployeesTable.css'
+import './EmployeesTable.css';
 import Loader from '../Loader/Loader';
+import { fetchEmployees } from './../../api';
 
 const EmployeesTable = () => {
   const [employees, setEmployees] = useState([]);
   const [rowColor1, setRowColor1] = useState('#f8f9fa');
   const [rowColor2, setRowColor2] = useState('#e9ecef');
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    const fetchEmployees = async () => {
+    const loadEmployees = async () => {
       try {
-        const response = await fetch('https://test-backend-g0f7.onrender.com/api/employees');
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
+        const data = await fetchEmployees();
         setEmployees(data);
       } catch (error) {
         console.error('Error fetching employees:', error);
@@ -22,7 +20,7 @@ const EmployeesTable = () => {
         setLoading(false);
       }
     };
-    fetchEmployees();
+    loadEmployees();
   }, []);
 
   const handleColorChange = (e) => {
@@ -33,13 +31,11 @@ const EmployeesTable = () => {
       setRowColor2(value);
     }
   };
-  if (loading) {
-    return <Loader />;
-  }
 
   return (
     <div className="employees-table">
       <h2>Tabela Pracowników</h2>
+      {loading && <Loader />}
       <div className="color-picker-container">
         <div className="form-group">
           <label htmlFor="rowColor1">Row Color 1</label>

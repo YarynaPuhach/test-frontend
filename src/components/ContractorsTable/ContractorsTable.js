@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './ContractorsTable.css';
 import Loader from '../Loader/Loader';
+import { fetchContractors, addContractor, editContractor, deleteContractor } from './../../api';
 
 const ContractorsTable = () => {
   const [contractors, setContractors] = useState([]);
@@ -13,31 +14,49 @@ const ContractorsTable = () => {
     houseNumber: '',
     apartmentNumber: ''
   });
-  const [editContractor, setEditContractor] = useState(null);
+  const [editContractorState, setEditContractor] = useState(null);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchContractors = async () => {
+    const loadContractors = async () => {
       try {
-        const response = await fetch('https://test-backend-g0f7.onrender.com/api/contractors');
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
+        const data = await fetchContractors();
         setContractors(data);
       } catch (error) {
-        console.error('Error fetching contractors:', error);
+        console.error('Error loading contractors:', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchContractors();
+    loadContractors();
   }, []);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    if (editContractor) {
+
+    if (name === 'nip' || name === 'regon') {
+      const numericRegex = /^[0-9]*$/;
+      if (!numericRegex.test(value)) {
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          [name]: `${name.toUpperCase()} must contain only numbers`
+        }));
+        return;
+      } else if (value.length < 7 || value.length > 15) {
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          [name]: `${name.toUpperCase()} must be between 7 and 15 digits`
+        }));
+      } else {
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          [name]: ''
+        }));
+      }
+    }
+
+    if (editContractorState) {
       setEditContractor((prevContractor) => ({
         ...prevContractor,
         [name]: type === 'checkbox' ? checked : value
@@ -52,12 +71,29 @@ const ContractorsTable = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!newContractor.nip) newErrors.nip = 'NIP is required';
-    if (!newContractor.regon) newErrors.regon = 'REGON is required';
+    const nipRegex = /^[0-9]{7,15}$/;
+    const regonRegex = /^[0-9]{7,15}$/;
+
+    if (!newContractor.nip) {
+      newErrors.nip = 'NIP is required';
+    } else if (!nipRegex.test(newContractor.nip)) {
+      newErrors.nip = 'NIP must be between 7 and 15 digits';
+    }
+
+    if (!newContractor.regon) {
+      newErrors.regon = 'REGON is required';
+    } else if (!regonRegex.test(newContractor.regon)) {
+      newErrors.regon = 'REGON must be between 7 and 15 digits';
+    }
+
     if (!newContractor.name) newErrors.name = 'Name is required';
     if (!newContractor.street) newErrors.street = 'Street is required';
     if (!newContractor.houseNumber) newErrors.houseNumber = 'House number is required';
+
     setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      window.scrollTo(0, 0);
+    }
     return Object.keys(newErrors).length === 0;
   };
 
@@ -65,15 +101,7 @@ const ContractorsTable = () => {
     if (!validateForm()) return;
 
     try {
-      const response = await fetch('https://test-backend-g0f7.onrender.com/api/contractors', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newContractor)
-      });
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      const data = await response.json();
+      const data = await addContractor(newContractor);
       setContractors((prevContractors) => [...prevContractors, data]);
       setNewContractor({
         nip: '',
@@ -85,32 +113,24 @@ const ContractorsTable = () => {
         apartmentNumber: ''
       });
       setErrors({});
+      alert('Contractor added successfully!');
     } catch (error) {
       console.error('Error adding contractor:', error);
     }
   };
 
   const handleEditContractor = async () => {
-    if (!editContractor) return;
+    if (!editContractorState) return;
 
-    // Create an object with only the fields that have been changed
     const updatedFields = {};
-    Object.keys(editContractor).forEach((key) => {
-      if (editContractor[key] !== (contractors.find(c => c.id === editContractor.id) || {})[key]) {
-        updatedFields[key] = editContractor[key];
+    Object.keys(editContractorState).forEach((key) => {
+      if (editContractorState[key] !== (contractors.find(c => c.id === editContractorState.id) || {})[key]) {
+        updatedFields[key] = editContractorState[key];
       }
     });
 
     try {
-      const response = await fetch(`https://test-backend-g0f7.onrender.com/api/contractors/${editContractor.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedFields)
-      });
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      const updatedContractor = await response.json();
+      const updatedContractor = await editContractor(editContractorState.id, updatedFields);
       setContractors((prevContractors) =>
         prevContractors.map((contractor) =>
           contractor.id === updatedContractor.id ? updatedContractor : contractor
@@ -118,6 +138,7 @@ const ContractorsTable = () => {
       );
       setEditContractor(null);
       setErrors({});
+      alert('Contractor edited successfully!');
     } catch (error) {
       console.error('Error editing contractor:', error);
     }
@@ -125,24 +146,20 @@ const ContractorsTable = () => {
 
   const handleDeleteContractor = async (id) => {
     try {
-      await fetch(`https://test-backend-g0f7.onrender.com/api/contractors/${id}`, {
-        method: 'DELETE'
-      });
+      await deleteContractor(id);
       setContractors((prevContractors) =>
         prevContractors.filter((contractor) => contractor.id !== id)
       );
+      alert('Contractor deleted successfully!');
     } catch (error) {
       console.error('Error deleting contractor:', error);
     }
   };
 
-  if (loading) {
-    return <Loader />;
-  }
-
   return (
     <div className="contractors-table">
       <h2>Dane Kontrahentów</h2>
+      {loading && <Loader />}
       <table className="contractors-table-table">
         <thead>
           <tr>
@@ -175,7 +192,7 @@ const ContractorsTable = () => {
         </tbody>
       </table>
 
-      <h3>{editContractor ? 'Edytuj kontrahenta' : 'Dodaj kontrahenta'}</h3>
+      <h3>{editContractorState ? 'Edytuj kontrahenta' : 'Dodaj kontrahenta'}</h3>
       <form className="contractor-form">
         <div className="form-group">
           <label htmlFor="nip">NIP</label>
@@ -185,7 +202,7 @@ const ContractorsTable = () => {
             name="nip"
             className="form-input"
             placeholder="Podaj NIP"
-            value={editContractor ? editContractor.nip : newContractor.nip}
+            value={editContractorState ? editContractorState.nip : newContractor.nip}
             onChange={(e) => handleInputChange(e)}
           />
           {errors.nip && <p className="error-text">{errors.nip}</p>}
@@ -198,7 +215,7 @@ const ContractorsTable = () => {
             name="regon"
             className="form-input"
             placeholder="Podaj REGON"
-            value={editContractor ? editContractor.regon : newContractor.regon}
+            value={editContractorState ? editContractorState.regon : newContractor.regon}
             onChange={(e) => handleInputChange(e)}
           />
           {errors.regon && <p className="error-text">{errors.regon}</p>}
@@ -211,7 +228,7 @@ const ContractorsTable = () => {
             name="name"
             className="form-input"
             placeholder="Podaj nazwę"
-            value={editContractor ? editContractor.name : newContractor.name}
+            value={editContractorState ? editContractorState.name : newContractor.name}
             onChange={(e) => handleInputChange(e)}
           />
           {errors.name && <p className="error-text">{errors.name}</p>}
@@ -223,7 +240,7 @@ const ContractorsTable = () => {
             id="vatPayer"
             name="vatPayer"
             className="form-checkbox"
-            checked={editContractor ? editContractor.vatPayer : newContractor.vatPayer}
+            checked={editContractorState ? editContractorState.vatPayer : newContractor.vatPayer}
             onChange={(e) => handleInputChange(e)}
           />
         </div>
@@ -235,7 +252,7 @@ const ContractorsTable = () => {
             name="street"
             className="form-input"
             placeholder="Podaj ulicę"
-            value={editContractor ? editContractor.street : newContractor.street}
+            value={editContractorState ? editContractorState.street : newContractor.street}
             onChange={(e) => handleInputChange(e)}
           />
           {errors.street && <p className="error-text">{errors.street}</p>}
@@ -248,7 +265,7 @@ const ContractorsTable = () => {
             name="houseNumber"
             className="form-input"
             placeholder="Podaj numer domu"
-            value={editContractor ? editContractor.houseNumber : newContractor.houseNumber}
+            value={editContractorState ? editContractorState.houseNumber : newContractor.houseNumber}
             onChange={(e) => handleInputChange(e)}
           />
           {errors.houseNumber && <p className="error-text">{errors.houseNumber}</p>}
@@ -261,16 +278,16 @@ const ContractorsTable = () => {
             name="apartmentNumber"
             className="form-input"
             placeholder="Podaj numer mieszkania"
-            value={editContractor ? editContractor.apartmentNumber : newContractor.apartmentNumber}
+            value={editContractorState ? editContractorState.apartmentNumber : newContractor.apartmentNumber}
             onChange={(e) => handleInputChange(e)}
           />
         </div>
         <button
           type="button"
           className="btn"
-          onClick={editContractor ? handleEditContractor : handleAddContractor}
+          onClick={editContractorState ? handleEditContractor : handleAddContractor}
         >
-          {editContractor ? 'Zapisz zmiany' : 'Dodaj kontrahenta'}
+          {editContractorState ? 'Zapisz zmiany' : 'Dodaj kontrahenta'}
         </button>
       </form>
     </div>

@@ -1,21 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import './InvoicesTable.css';
 import Loader from '../Loader/Loader';
+import { fetchInvoices, updateInvoice } from './../../api';
 
 const InvoicesTable = () => {
   const [invoices, setInvoices] = useState([]);
-  const [vatRate, setVatRate] = useState(23); // Default VAT rate
+  const [vatRate, setVatRate] = useState(23);
   const [highlightRows, setHighlightRows] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchInvoices = async () => {
+    const loadInvoices = async () => {
       try {
-        const response = await fetch('https://test-backend-g0f7.onrender.com/api/invoices');
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
+        const data = await fetchInvoices();
         setInvoices(data);
       } catch (error) {
         console.error('Error fetching invoices:', error);
@@ -23,7 +20,7 @@ const InvoicesTable = () => {
         setLoading(false);
       }
     };
-    fetchInvoices();
+    loadInvoices();
   }, []);
 
   const handleVatChange = (e) => {
@@ -42,13 +39,39 @@ const InvoicesTable = () => {
       grossAmount: grossAmount * quantity
     };
   };
-  if (loading) {
-    return <Loader />;
-  }
+
+  const handleNetAmountChange = (index, newNetAmount) => {
+    const updatedInvoices = invoices.map((invoice, i) => {
+      if (i === index) {
+        return { ...invoice, amount: newNetAmount };
+      }
+      return invoice;
+    });
+    setInvoices(updatedInvoices);
+  };
+
+  const handleQuantityChange = (index, newQuantity) => {
+    const updatedInvoices = invoices.map((invoice, i) => {
+      if (i === index) {
+        return { ...invoice, quantity: newQuantity };
+      }
+      return invoice;
+    });
+    setInvoices(updatedInvoices);
+  };
+
+  const saveChanges = async (invoice) => {
+    try {
+      await updateInvoice(invoice);
+    } catch (error) {
+      console.error('Error saving invoice:', error);
+    }
+  };
 
   return (
     <div className="invoices-table">
       <h2>Invoices Table</h2>
+      {loading && <Loader />}
       <div className="form-group">
         <label htmlFor="vatRate">VAT Rate (%)</label>
         <input
@@ -82,8 +105,8 @@ const InvoicesTable = () => {
           {invoices.map((invoice, index) => {
             const netAmount = parseFloat(invoice.amount);
             const quantity = parseInt(invoice.quantity, 10);
-            const vatRate = parseFloat(invoice.vatRate);
-            const { vatAmount, grossAmount } = calculateAmounts(netAmount, vatRate, quantity);
+            const currentVatRate = parseFloat(invoice.vatRate || vatRate);
+            const { vatAmount, grossAmount } = calculateAmounts(netAmount, currentVatRate, quantity);
 
             return (
               <tr
@@ -93,9 +116,23 @@ const InvoicesTable = () => {
                 <td>{index + 1}</td>
                 <td>{invoice.description || 'N/A'}</td>
                 <td>{invoice.mpk || 'N/A'}</td>
-                <td>{netAmount.toFixed(2)}</td>
-                <td>{quantity}</td>
-                <td>{vatRate.toFixed(2)}</td>
+                <td>
+                  <input
+                    type="number"
+                    value={netAmount}
+                    onChange={(e) => handleNetAmountChange(index, parseFloat(e.target.value))}
+                    onBlur={() => saveChanges(invoice)}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="number"
+                    value={quantity}
+                    onChange={(e) => handleQuantityChange(index, parseInt(e.target.value))}
+                    onBlur={() => saveChanges(invoice)}
+                  />
+                </td>
+                <td>{currentVatRate.toFixed(2)}</td>
                 <td>{grossAmount.toFixed(2)}</td>
                 <td>{(netAmount * quantity).toFixed(2)}</td>
                 <td>{(grossAmount * quantity).toFixed(2)}</td>
